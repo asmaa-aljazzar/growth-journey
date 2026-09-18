@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A private, local-first personal growth journal centered on Orange Academy, English, review, communication, wellbeing, and light RT maintenance."
+    />
+    <title>My Growth Journey</title>
+    <link rel="stylesheet" href="styles.css?v=20260918-1" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js?v=20260918-1" defer></script>
+    <script src="auth.js?v=20260918-1" defer></script>
+    <script src="script.js?v=20260918-1" defer></script>
+  </head>
+  <body>
+    <section class="auth-shell" id="auth-shell" aria-labelledby="auth-title">
+      <div class="auth-card">
+        <div class="auth-brand"><span aria-hidden="true">✦</span> My Growth Journey</div>
+        <p class="eyebrow">Private • synchronized • yours</p>
+        <h1 id="auth-title">Welcome back</h1>
+        <p id="auth-description">Sign in to open your private Growth Journey.</p>
+        <div class="auth-tabs" aria-label="Account action">
+          <button class="active" id="show-login" type="button">Sign in</button>
+          <button id="show-register" type="button">Create account</button>
+        </div>
+        <form id="auth-form">
+          <input id="auth-mode" name="mode" type="hidden" value="login" />
+          <label>Email<input id="auth-email" name="email" type="email" autocomplete="email" required /></label>
+          <label>Password<input name="password" type="password" minlength="8" autocomplete="current-password" required /></label>
+          <button class="primary-button auth-submit" id="auth-submit" type="submit">Sign in</button>
+        </form>
+        <button class="text-button auth-forgot" id="forgot-password" type="button">Forgot password?</button>
+        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+        <p class="auth-privacy">Your account unlocks only your own journal row. The public website never contains your private entries.</p>
+      </div>
+    </section>
+
+    <div id="app-shell" hidden>
+    <a class="skip-link" href="#main-content">Skip to journal</a>
+
+    <header class="site-header">
+      <div class="brand" aria-label="My Growth Journey">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span>
+          <strong>My Growth Journey</strong>
+          <small data-period-label>Current 30-day cycle</small>
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <div class="account-chip">
+          <span id="account-email">Signed in</span>
+          <button class="text-button" id="sign-out-button" type="button">Sign out</button>
+        </div>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+          <span aria-hidden="true">☾</span>
+          <span class="button-label">Dark</span>
+        </button>
+        <button class="icon-button" id="print-button" type="button">
+          <span aria-hidden="true">⌁</span>
+          <span class="button-label">Print</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="tab-bar" aria-label="Journal sections" role="tablist">
+      <button class="tab-button active" id="tab-overview" role="tab" aria-selected="true" aria-controls="overview" data-tab="overview">Overview</button>
+      <button class="tab-button" id="tab-goals" role="tab" aria-selected="false" aria-controls="goals" data-tab="goals">Goals</button>
+      <button class="tab-button" id="tab-habits" role="tab" aria-selected="false" aria-controls="habits" data-tab="habits">Habits</button>
+      <button class="tab-button" id="tab-projects" role="tab" aria-selected="false" aria-controls="projects" data-tab="projects">Projects</button>
+      <button class="tab-button" id="tab-practice" role="tab" aria-selected="false" aria-controls="practice" data-tab="practice">Practice</button>
+      <button class="tab-button" id="tab-resources" role="tab" aria-selected="false" aria-controls="resources" data-tab="resources">Resources</button>
+      <button class="tab-button" id="tab-reflections" role="tab" aria-selected="false" aria-controls="reflections" data-tab="reflections">Evidence</button>
+      <button class="tab-button" id="tab-reviews" role="tab" aria-selected="false" aria-controls="reviews" data-tab="reviews">Reviews</button>
+    </nav>
+
+    <main id="main-content">
+      <!-- Overview -->
+      <section class="tab-panel active" id="overview" role="tabpanel" aria-labelledby="tab-overview">
+        <div class="hero card">
+          <div class="hero-copy">
+            <p class="eyebrow">A month of deliberate progress</p>
+            <h1>Progress with commitment,<br /><em>not perfection.</em></h1>
+            <label class="sr-only" for="motivation">My monthly motivation</label>
+            <textarea id="motivation" class="editable-copy autosave-field" data-field="motivation" rows="5">This month, Orange Academy is my main work priority and English is a serious daily career habit. I will protect time to review what I learn, keep RT small and optional, and use this journal to record evidence without turning every day into a performance test.</textarea>
+            <div class="hero-actions">
+              <button class="primary-button" type="button" data-open-tab="habits">Check in today <span aria-hidden="true">→</span></button>
+              <span class="save-status" id="save-status" role="status" aria-live="polite">Saved to cloud</span>
+            </div>
+          </div>
+          <div class="hero-progress" aria-label="Monthly progress">
+            <div class="progress-orbit">
+              <span id="overall-progress">0%</span>
+              <small>overall</small>
+            </div>
+            <p id="encouragement">Begin with one small, honest action.</p>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">At a glance</p>
+            <h2>My realistic focus areas</h2>
+          </div>
+          <button class="text-button" type="button" data-open-tab="goals">Edit goals →</button>
+        </div>
+        <div class="summary-grid" id="goal-summary"></div>
+
+        <div class="overview-card-list" id="overview-card-list">
+        <section class="movable-card" data-card-id="rhythms" draggable="true">
+          <div class="card-move-bar">
+            <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <strong>Weekly rhythms</strong>
+            <span class="move-buttons"><button type="button" data-move-card="up" aria-label="Move weekly rhythms up">↑</button><button type="button" data-move-card="down" aria-label="Move weekly rhythms down">↓</button></span>
+          </div>
+          <div class="two-column-grid">
+          <article class="card schedule-card">
+            <div class="card-heading">
+              <span class="category-icon academy" aria-hidden="true">☀</span>
+              <div>
+                <p class="eyebrow">Sunday–Thursday</p>
+                <h2>Academy rhythm</h2>
+              </div>
+            </div>
+            <ol class="timeline">
+              <li><time>Before 8:30</time><span>Prepare, eat, and get ready</span></li>
+              <li><time>8:30</time><span>Leave home</span></li>
+              <li><time>Until 4:00</time><span>Orange Coding Academy</span></li>
+              <li><time>4:00–4:45</time><span>Travel home</span></li>
+              <li><time>After arrival</time><span>Eat and rest, then review Academy material before other work</span></li>
+            </ol>
+          </article>
+
+          <article class="card weekend-card">
+            <div class="card-heading">
+              <span class="category-icon english" aria-hidden="true">A</span>
+              <div>
+                <p class="eyebrow">Friday–Saturday</p>
+                <h2>Weekend rhythm</h2>
+              </div>
+            </div>
+            <ul class="soft-list">
+              <li>One deep Academy review or catch-up session</li>
+              <li>Optional short RT block only if Academy work is under control</li>
+              <li>A real break between focused blocks</li>
+              <li>Review the week’s Academy material and unfinished tasks</li>
+              <li>Keep English daily: Speexx, five minutes speaking, and a short recording when scheduled</li>
+            </ul>
+          </article>
+          </div>
+        </section>
+
+        <article class="card todo-card movable-card" data-card-id="todos" draggable="true">
+          <div class="card-move-bar">
+            <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <strong>Daily to-do</strong>
+            <span class="move-buttons"><button type="button" data-move-card="up" aria-label="Move daily to-do up">↑</button><button type="button" data-move-card="down" aria-label="Move daily to-do down">↓</button></span>
+          </div>
+          <div class="section-heading compact">
+            <div><p class="eyebrow">One day at a time</p><h2>Today’s realistic list</h2></div>
+            <label class="date-picker-label">Date<input id="todo-date" type="date" /></label>
+          </div>
+          <form class="todo-form" id="todo-form">
+            <input name="text" type="text" maxlength="180" placeholder="Add one clear next action…" required />
+            <select name="category" aria-label="To-do category">
+              <option>Academy</option><option>English</option><option>Personal</option><option>RT</option>
+            </select>
+            <button class="primary-button" type="submit">Add</button>
+          </form>
+          <div class="todo-list" id="todo-list"></div>
+          <div class="todo-footer">
+            <span id="todo-count">0 tasks</span>
+            <button class="secondary-button" id="carry-todos-button" type="button">Carry unfinished → tomorrow</button>
+          </div>
+        </article>
+
+        <article class="card review-focus-card movable-card" data-card-id="academy-review" draggable="true">
+          <div class="card-move-bar">
+            <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <strong>Academy review</strong>
+            <span class="move-buttons"><button type="button" data-move-card="up" aria-label="Move Academy review up">↑</button><button type="button" data-move-card="down" aria-label="Move Academy review down">↓</button></span>
+          </div>
+          <div class="review-focus-copy">
+            <p class="eyebrow">Academy retention • today</p>
+            <h2>Review before the lesson disappears</h2>
+            <p id="academy-review-status">20–30 focused minutes is enough: explain, retry one example, then note what is still unclear.</p>
+          </div>
+          <div class="review-focus-controls">
+            <label for="academy-review-focus">What needs review today?</label>
+            <textarea id="academy-review-focus" rows="3" placeholder="Example: CSS positioning, today’s task mistake, one concept I could not explain..."></textarea>
+            <button class="primary-button" id="academy-review-done" type="button">Mark review complete</button>
+          </div>
+        </article>
+
+        <article class="card today-card movable-card" data-card-id="today-actions" draggable="true">
+          <div class="card-move-bar">
+            <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <strong>Daily habits</strong>
+            <span class="move-buttons"><button type="button" data-move-card="up" aria-label="Move daily habits up">↑</button><button type="button" data-move-card="down" aria-label="Move daily habits down">↓</button></span>
+          </div>
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Today</p>
+              <h2>Small steps still move the story</h2>
+            </div>
+            <span class="date-pill" id="today-label"></span>
+          </div>
+          <div class="today-actions" id="today-actions"></div>
+        </article>
+
+        <article class="card week-snapshot movable-card" data-card-id="week-snapshot" draggable="true">
+          <div class="card-move-bar">
+            <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+            <strong>Weekly snapshot</strong>
+            <span class="move-buttons"><button type="button" data-move-card="up" aria-label="Move weekly snapshot up">↑</button><button type="button" data-move-card="down" aria-label="Move weekly snapshot down">↓</button></span>
+          </div>
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">This week</p>
+              <h2>Keep the plan visible</h2>
+            </div>
+            <span class="date-pill" id="week-range-label"></span>
+          </div>
+          <div class="snapshot-grid" id="week-snapshot"></div>
+        </article>
+        </div>
+      </section>
+
+      <!-- Goals -->
+      <section class="tab-panel" id="goals" role="tabpanel" aria-labelledby="tab-goals" hidden>
+        <div class="page-intro">
+          <p class="eyebrow">Specific • measurable • realistic</p>
+          <h1>My realistic monthly goals</h1>
+          <p>Edit any sentence, add your own steps, and check a step only when you have evidence.</p>
+        </div>
+        <aside class="card goal-guide" aria-label="How to use goal checkboxes">
+          <div><span class="step-kind milestone">Milestone</span><p>Check immediately after completing the specific result.</p></div>
+          <div><span class="step-kind monthly">Month-end check</span><p>Leave unchecked until the final day shown above, then verify the whole-cycle condition.</p></div>
+          <div><strong>Daily actions belong in Habits.</strong><p>Goal checks are not a daily to-do list.</p></div>
+        </aside>
+        <div class="goals-list" id="goals-list"></div>
+
+        <article class="card english-feature">
+          <div class="card-heading">
+            <span class="category-icon english" aria-hidden="true">A</span>
+            <div>
+              <p class="eyebrow">Daily career-support habit</p>
+              <h2>English: daily career practice</h2>
+            </div>
+          </div>
+          <p>English is one of the main priorities this month. The target is consistent useful practice—not passive studying or perfection.</p>
+          <div class="english-rules">
+            <span>10+ min Speexx</span>
+            <span>5+ min speaking</span>
+            <span>Record about 1× / week</span>
+            <span>Note one lesson</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- Habits -->
+      <section class="tab-panel" id="habits" role="tabpanel" aria-labelledby="tab-habits" hidden>
+        <div class="page-intro with-action">
+          <div>
+            <p class="eyebrow" data-period-label>Current 30-day cycle</p>
+            <h1>Monthly habit tracker</h1>
+            <p>Checks give you information, not a grade. Resume gently after a missed day.</p>
+            <div class="page-progress mini-progress" id="habit-progress-bar" role="progressbar" aria-label="Habit completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+          </div>
+          <div class="progress-chip"><strong id="habit-progress">0%</strong><span>completed</span></div>
+        </div>
+        <div class="legend" aria-label="Tracker legend">
+          <span><i class="legend-dot academy"></i>Academy</span>
+          <span><i class="legend-dot english"></i>English</span>
+          <span><i class="legend-dot health"></i>Health</span>
+          <span><i class="legend-dot personality"></i>Wellbeing</span>
+          <span><i class="legend-dot rt"></i>RT optional</span>
+        </div>
+        <div class="table-card card">
+          <div class="table-scroll">
+            <table class="habit-table">
+              <caption class="sr-only">Daily habits for the current 30-day cycle</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Plan</th>
+                  <th scope="col">Speexx</th>
+                  <th scope="col">Speak</th>
+                  <th scope="col">EN record</th>
+                  <th scope="col">Academy review</th>
+                  <th scope="col">Prep</th>
+                  <th scope="col">Meal</th>
+                  <th scope="col">Move</th>
+                  <th scope="col">Break</th>
+                  <th scope="col">Journal</th>
+                  <th scope="col">RT <small>(optional)</small></th>
+                </tr>
+              </thead>
+              <tbody id="habit-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Projects -->
+      <section class="tab-panel" id="projects" role="tabpanel" aria-labelledby="tab-projects" hidden>
+        <div class="page-intro">
+          <p class="eyebrow">Build • test • explain</p>
+          <h1>Academy first. English every day. RT only when there is room.</h1>
+          <p>Track daily, group, and masterpiece work here, and protect review time. RT is kept below as optional maintenance so it cannot crowd out Academy or English.</p>
+        </div>
+
+        <article class="card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Deadlines and responsibilities</p>
+              <h2>Orange Academy task tracker</h2>
+            </div>
+            <button class="primary-button small" id="add-assignment-button" type="button">+ Add Academy task</button>
+          </div>
+          <div class="assignment-summary" id="assignment-summary" aria-label="Active Academy tasks by type"></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Task</th>
+                  <th scope="col">Deadline</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">My responsibility</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="assignments-body"></tbody>
+            </table>
+          </div>
+          <p class="empty-state" id="assignments-empty">No Academy tasks yet. Add daily, group, and masterpiece tasks as Orange gives them to you.</p>
+        </article>
+
+
+        <article class="card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Explore before committing</p>
+              <h2>Graduation-project ideas</h2>
+            </div>
+            <button class="primary-button small" id="add-idea-button" type="button">+ Add idea</button>
+          </div>
+          <div class="idea-grid" id="ideas-grid"></div>
+        </article>
+
+        <details class="secondary-work card">
+          <summary>
+            <span><strong>RT maintenance</strong><small>Optional • open only when Academy and English are under control</small></span>
+            <span aria-hidden="true">＋</span>
+          </summary>
+          <div class="secondary-work-body">
+                    <article class="card rt-board">
+                      <div class="section-heading compact">
+                        <div>
+                          <p class="eyebrow">Low priority • small maintenance blocks only</p>
+                          <h2>RT maintenance roadmap</h2>
+                        </div>
+                        <div class="progress-chip"><strong id="rt-progress">0%</strong><span>verified</span></div>
+                      </div>
+                      <div class="page-progress mini-progress" id="rt-progress-bar" role="progressbar" aria-label="RT task completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+                      <div class="rt-sessions" id="rt-sessions"></div>
+                      <div class="future-note">
+                        <strong>Later, after the secure MVP:</strong>
+                        payment functionality, measured performance improvements, and image optimization.
+                      </div>
+                    </article>
+
+                    <form class="card entry-form rt-evidence-form" id="rt-evidence-form" data-category="rt-evidence">
+                      <div class="card-heading">
+                        <span class="category-icon rt" aria-hidden="true">✓</span>
+                        <div><p class="eyebrow">Only after an RT maintenance block</p><h2>RT evidence note</h2></div>
+                      </div>
+                      <div class="split-fields">
+                        <label>Date<input name="date" type="date" data-cycle-date required /></label>
+                        <label>Roadmap session<select name="session"><option>Session 4</option><option>Session 5</option><option>Session 6</option><option>Session 7</option><option>Session 8</option></select></label>
+                      </div>
+                      <label>What did I test?<textarea name="tested" rows="2" required></textarea></label>
+                      <label>What was the result?<textarea name="result" rows="2" required></textarea></label>
+                      <label>What can I explain without notes?<textarea name="explained" rows="2"></textarea></label>
+                      <label>Smallest next action<textarea name="next" rows="2" required></textarea></label>
+                      <button class="primary-button" type="submit">Save RT evidence</button>
+                    </form>
+          </div>
+        </details>
+      </section>
+
+      <!-- Practice -->
+      <section class="tab-panel" id="practice" role="tabpanel" aria-labelledby="tab-practice" hidden>
+        <div class="page-intro">
+          <p class="eyebrow">Practice being understood</p>
+          <h1>Communication and boundaries</h1>
+          <p>Confidence is not performing perfectly. It is choosing a clear, respectful response.</p>
+        </div>
+
+        <div class="personality-counters" id="personality-counters"></div>
+
+        <div class="two-column-grid forms-grid">
+          <form class="card entry-form" id="presentation-form" data-category="presentation">
+            <div class="card-heading">
+              <span class="category-icon personality" aria-hidden="true">◎</span>
+              <div><p class="eyebrow">Weekly</p><h2>Presentation practice</h2></div>
+            </div>
+            <label>Date<input name="date" type="date" data-cycle-date required /></label>
+            <label>Topic<input name="topic" type="text" placeholder="Explain today’s Academy topic" required /></label>
+            <label>What should the audience understand?<textarea name="message" rows="3" required></textarea></label>
+            <label>My three main points<textarea name="points" rows="4" placeholder="1.&#10;2.&#10;3."></textarea></label>
+            <label>What did the listener understand?<textarea name="feedback" rows="3"></textarea></label>
+            <div class="split-fields">
+              <label>One strength<input name="strength" type="text" /></label>
+              <label>One improvement<input name="improvement" type="text" /></label>
+            </div>
+            <button class="primary-button" type="submit">Save practice</button>
+          </form>
+
+          <form class="card entry-form" id="boundary-form" data-category="boundary">
+            <div class="card-heading">
+              <span class="category-icon personality" aria-hidden="true">◇</span>
+              <div><p class="eyebrow">Pause • choose • respond</p><h2>Boundary reflection</h2></div>
+            </div>
+            <label>Date<input name="date" type="date" data-cycle-date required /></label>
+            <label>What happened?<textarea name="situation" rows="3" required></textarea></label>
+            <label>What did I feel?<textarea name="feelings" rows="2"></textarea></label>
+            <label>What did I choose to do?<textarea name="response" rows="3"></textarea></label>
+            <label>What can I try next time?<textarea name="next" rows="3"></textarea></label>
+            <fieldset class="choice-field">
+              <legend>Was this an intentional solo break?</legend>
+              <label><input type="radio" name="solo" value="Yes" /> Yes</label>
+              <label><input type="radio" name="solo" value="No" checked /> No</label>
+            </fieldset>
+            <button class="primary-button" type="submit">Save reflection</button>
+          </form>
+        </div>
+
+        <article class="card scripts-card">
+          <p class="eyebrow">Words I can borrow</p>
+          <h2>My boundary sentences</h2>
+          <div class="quote-grid">
+            <blockquote>“I’m not comfortable with that.”</blockquote>
+            <blockquote>“Please don’t speak to me that way.”</blockquote>
+            <blockquote>“I understand your opinion, but I don’t agree.”</blockquote>
+          </div>
+        </article>
+
+        <article class="card deep-reflection-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Twice this month—not daily</p>
+              <h2>Six deeper reflection questions</h2>
+            </div>
+          </div>
+          <p>Complete all six once near the start of this cycle and again on its final day. For individual situations, use only the four short questions in the boundary form above.</p>
+          <div class="deep-reflection-grid">
+            <details open>
+              <summary>Starting reflection</summary>
+              <div class="deep-questions" data-reflection="baseline"></div>
+            </details>
+            <details>
+              <summary>End-of-cycle reflection</summary>
+              <div class="deep-questions" data-reflection="end"></div>
+            </details>
+          </div>
+        </article>
+      </section>
+
+      <!-- Resource library -->
+      <section class="tab-panel" id="resources" role="tabpanel" aria-labelledby="tab-resources" hidden>
+        <div class="page-intro with-action">
+          <div>
+            <p class="eyebrow">Books • videos • courses • guides</p>
+            <h1>My journey library</h1>
+            <p>Keep useful resources in one place. Choose one main resource each week so learning does not replace practice.</p>
+          </div>
+          <button class="primary-button" id="add-resource-button" type="button">+ Add resource</button>
+        </div>
+
+        <div class="resource-summary" id="resource-summary"></div>
+
+        <aside class="card resource-focus">
+          <span class="category-icon english" aria-hidden="true">1</span>
+          <div>
+            <p class="eyebrow">Simple rule</p>
+            <h2>One main resource this week</h2>
+            <p>Read or watch for 10–15 minutes, record one useful lesson, then practise one action. Finishing everything is not the goal.</p>
+          </div>
+        </aside>
+
+        <div class="resource-filters card" aria-label="Filter resources">
+          <label>Search<input id="resource-search" type="search" placeholder="Search by title or creator" /></label>
+          <label>Category
+            <select id="resource-category-filter">
+              <option value="all">All categories</option>
+              <option value="Presentation">Presentation</option>
+              <option value="Boundaries">Boundaries</option>
+              <option value="English">English</option>
+              <option value="Web development">Web development</option>
+              <option value="Health">Health</option>
+              <option value="Creative break">Creative break</option>
+            </select>
+          </label>
+          <label>Type
+            <select id="resource-type-filter">
+              <option value="all">All types</option>
+              <option value="Book">Book</option>
+              <option value="Video">Video</option>
+              <option value="Course">Course</option>
+              <option value="Guide">Guide</option>
+              <option value="Article">Article</option>
+            </select>
+          </label>
+          <label>Status
+            <select id="resource-status-filter">
+              <option value="all">All statuses and focus</option>
+              <option value="This week">★ This week</option>
+              <option value="Not started">Not started</option>
+              <option value="In progress">In progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </label>
+          <button class="secondary-button" id="clear-resource-filters" type="button">Clear</button>
+        </div>
+
+        <div class="resource-grid" id="resource-grid"></div>
+        <p class="empty-state" id="resources-empty">No resources match these filters. Clear the filters or add a new resource.</p>
+      </section>
+
+      <!-- Reflections -->
+      <section class="tab-panel" id="reflections" role="tabpanel" aria-labelledby="tab-reflections" hidden>
+        <div class="page-intro">
+          <p class="eyebrow">Notice • learn • continue</p>
+          <h1>Important notes and evidence</h1>
+          <p>Your feelings and creative daily journal can stay on paper. Use this optional digital section only for an important lesson, technical evidence, decision, or next action.</p>
+        </div>
+
+        <form class="card daily-form entry-form" id="daily-form" data-category="daily">
+          <div class="form-title-row">
+            <div>
+              <p class="eyebrow">Optional digital summary</p>
+              <h2>What is worth carrying forward?</h2>
+            </div>
+            <label>Date<input name="date" type="date" data-cycle-date required /></label>
+          </div>
+          <div class="split-fields three">
+            <label>Energy (1–5)<input name="energy" type="number" min="1" max="5" value="3" required /></label>
+            <label>Most important Academy task<input name="academy" type="text" /></label>
+            <label>Academy review focus<input name="review" type="text" /></label>
+          </div>
+          <label>What did I complete?<textarea name="completed" rows="3"></textarea></label>
+          <label>What did I learn or explain without notes?<textarea name="learned" rows="3"></textarea></label>
+          <label>What was difficult?<textarea name="difficult" rows="3"></textarea></label>
+          <label>Tomorrow’s first small action<textarea name="next" rows="2" required></textarea></label>
+          <label>One thing I am releasing before sleep<textarea name="release" rows="2"></textarea></label>
+          <button class="primary-button" type="submit">Save important note</button>
+        </form>
+
+        <article class="card entries-card">
+          <div class="section-heading compact">
+            <div><p class="eyebrow">Saved to your account</p><h2>Journal entries</h2></div>
+            <span id="entry-count" class="date-pill">0 entries</span>
+          </div>
+          <div class="filters" aria-label="Filter journal entries">
+            <label>Category
+              <select id="entry-category-filter">
+                <option value="all">All categories</option>
+                <option value="daily">Daily</option>
+                <option value="presentation">Presentation</option>
+                <option value="boundary">Boundary</option>
+                <option value="rt-evidence">RT evidence</option>
+                <option value="weekly">Weekly review</option>
+                <option value="monthly">Monthly review</option>
+              </select>
+            </label>
+            <label>Date<input id="entry-date-filter" type="date" data-cycle-date /></label>
+            <button class="secondary-button" id="clear-filters" type="button">Clear filters</button>
+          </div>
+          <div class="entries-list" id="entries-list"></div>
+          <p class="empty-state" id="entries-empty">No entries match these filters yet.</p>
+        </article>
+      </section>
+
+      <!-- Reviews -->
+      <section class="tab-panel" id="reviews" role="tabpanel" aria-labelledby="tab-reviews" hidden>
+        <div class="page-intro">
+          <p class="eyebrow">Review the evidence</p>
+          <h1>Weekly and monthly reviews</h1>
+          <p>Adjust the plan from real information. A difficult week is data, not a verdict.</p>
+        </div>
+
+        <article class="card weekly-totals-card">
+          <div class="section-heading compact">
+            <div><p class="eyebrow">Counted for you</p><h2>Current weekly totals</h2></div>
+            <span class="date-pill" id="review-week-label"></span>
+          </div>
+          <div class="weekly-totals" id="weekly-totals"></div>
+        </article>
+
+        <div class="two-column-grid forms-grid">
+          <form class="card entry-form" id="weekly-form" data-category="weekly">
+            <div class="card-heading">
+              <span class="category-icon academy" aria-hidden="true">↻</span>
+              <div><p class="eyebrow">Every Thursday</p><h2>Weekly review</h2></div>
+            </div>
+            <label>Review date<input name="date" type="date" data-cycle-date required /></label>
+            <label>What did I complete?<textarea name="completed" rows="3"></textarea></label>
+            <label>What evidence do I have?<textarea name="evidence" rows="3"></textarea></label>
+            <label>What helped, and what created pressure?<textarea name="pressure" rows="3"></textarea></label>
+            <label>What will I continue, reduce, or change?<textarea name="adjustment" rows="3"></textarea></label>
+            <label>Friday and Saturday outcomes<textarea name="weekend" rows="3"></textarea></label>
+            <label>Next week’s three priorities<textarea name="priorities" rows="4" placeholder="1.&#10;2.&#10;3."></textarea></label>
+            <button class="primary-button" type="submit">Save weekly review</button>
+          </form>
+
+          <form class="card entry-form" id="monthly-form" data-category="monthly">
+            <div class="card-heading">
+              <span class="category-icon health" aria-hidden="true">✦</span>
+              <div><p class="eyebrow" data-period-end-label>Final cycle day</p><h2>End-of-month review</h2></div>
+            </div>
+            <input name="date" type="hidden" data-period-end-value />
+            <label>Academy evidence and result<textarea name="academy" rows="3"></textarea></label>
+            <label>English improvement<textarea name="english" rows="3"></textarea></label>
+            <label>Optional RT maintenance<textarea name="rt" rows="3"></textarea></label>
+            <label>Presentation improvement<textarea name="presentation" rows="3"></textarea></label>
+            <label>What I learned about boundaries<textarea name="boundaries" rows="3"></textarea></label>
+            <label>Health evidence and energy<textarea name="health" rows="3"></textarea></label>
+            <label>What am I proud of because I have evidence?<textarea name="proud" rows="3"></textarea></label>
+            <label>My next five goals<textarea name="nextGoals" rows="6" placeholder="1.&#10;2.&#10;3.&#10;4.&#10;5."></textarea></label>
+            <button class="primary-button" type="submit">Save monthly review</button>
+          </form>
+        </div>
+
+        <article class="card archive-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Keep the past without cluttering the present</p>
+              <h2>Month archive</h2>
+              <p>Save the current cycle as a permanent snapshot. Starting the next cycle creates fresh goals and trackers without deleting older months.</p>
+            </div>
+            <div class="archive-actions">
+              <button class="secondary-button" id="save-month-snapshot" type="button">Save current snapshot</button>
+              <button class="primary-button" id="archive-start-next" type="button">Archive &amp; start next cycle</button>
+            </div>
+          </div>
+          <div class="archive-list" id="archive-list"></div>
+          <p class="empty-state" id="archive-empty">No archived months yet.</p>
+        </article>
+
+        <article class="card backup-card">
+          <div>
+            <p class="eyebrow">Protect your work</p>
+            <h2>Backup and restore</h2>
+            <p>Your account now saves to Supabase automatically. JSON export remains an independent backup you control.</p>
+          </div>
+          <div class="backup-actions">
+            <button class="primary-button" id="download-backup-button" type="button">Save JSON database</button>
+            <button class="secondary-button" id="restore-backup-button" type="button">Load JSON database</button>
+            <input class="sr-only" id="backup-file-input" type="file" accept="application/json,.json" />
+          </div>
+        </article>
+
+        <article class="card danger-zone">
+          <div>
+            <p class="eyebrow">Fresh start</p>
+            <h2>Clear all journal data</h2>
+            <p>This restores the original sample goals and removes your saved entries.</p>
+          </div>
+          <button class="danger-button" id="clear-data-button" type="button">Clear my data</button>
+        </article>
+      </section>
+    </main>
+
+    <!-- Reusable editor for saved journal entries -->
+    <dialog id="entry-dialog">
+      <form method="dialog" id="entry-editor-form">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Edit saved entry</p><h2>Edit reflection</h2></div>
+          <button class="dialog-close" value="cancel" aria-label="Close editor">×</button>
+        </div>
+        <input type="hidden" name="id" />
+        <label>Date<input name="date" type="date" data-cycle-date required /></label>
+        <label>Category
+          <select name="category">
+            <option value="daily">Daily</option>
+            <option value="presentation">Presentation</option>
+            <option value="boundary">Boundary</option>
+            <option value="rt-evidence">RT evidence</option>
+            <option value="weekly">Weekly review</option>
+            <option value="monthly">Monthly review</option>
+          </select>
+        </label>
+        <label>Title<input name="title" type="text" required /></label>
+        <label>Entry<textarea name="body" rows="12" required></textarea></label>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel">Cancel</button>
+          <button class="primary-button" id="save-entry-edit" value="default">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Assignment editor -->
+    <dialog id="assignment-dialog">
+      <form method="dialog" id="assignment-form">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Academy planning</p><h2 id="assignment-dialog-title">Add assignment</h2></div>
+          <button class="dialog-close" value="cancel" aria-label="Close editor">×</button>
+        </div>
+        <input type="hidden" name="id" />
+        <label>Academy task<input name="task" type="text" required /></label>
+        <div class="split-fields">
+          <label>Deadline<input name="deadline" type="date" required /></label>
+          <label>Task type<select name="type"><option>Daily</option><option>Group</option><option>Masterpiece</option></select></label>
+        </div>
+        <label>My responsibility<textarea name="responsibility" rows="3" required></textarea></label>
+        <div class="split-fields">
+          <label>Internal deadline<input name="internalDeadline" type="date" /></label>
+          <label>Status<select name="status"><option>Planned</option><option>In progress</option><option>Submitted</option><option>Feedback received</option></select></label>
+        </div>
+        <label>Feedback<textarea name="feedback" rows="3"></textarea></label>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel">Cancel</button>
+          <button class="primary-button" id="save-assignment" value="default">Save assignment</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Resource editor -->
+    <dialog id="resource-dialog">
+      <form method="dialog" id="resource-form">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Journey library</p><h2 id="resource-dialog-title">Add resource</h2></div>
+          <button class="dialog-close" value="cancel" aria-label="Close editor">×</button>
+        </div>
+        <input type="hidden" name="id" />
+        <label>Title<input name="title" type="text" required /></label>
+        <label>Author or creator<input name="creator" type="text" /></label>
+        <div class="split-fields">
+          <label>Category
+            <select name="category"><option>Presentation</option><option>Boundaries</option><option>English</option><option>Web development</option><option>Health</option><option>Creative break</option></select>
+          </label>
+          <label>Type
+            <select name="type"><option>Book</option><option>Video</option><option>Course</option><option>Guide</option><option>Article</option></select>
+          </label>
+        </div>
+        <label>Link<input name="url" type="url" placeholder="https://example.com" /></label>
+        <div class="split-fields">
+          <label>Status<select name="status"><option>Not started</option><option>In progress</option><option>Done</option></select></label>
+          <label>Track progress using
+            <select name="tracking"><option>Status only</option><option>Pages</option><option>Chapters</option><option>Lessons</option></select>
+          </label>
+        </div>
+        <p class="resource-tracking-explanation" id="resource-tracking-explanation">For videos, articles, guides, and open-ended resources, simply choose Not started, In progress, or Done.</p>
+        <div class="split-fields resource-unit-fields" id="resource-unit-fields" hidden>
+          <label><span id="resource-completed-label">Completed</span><input name="completedUnits" type="number" min="0" step="1" value="0" /></label>
+          <label><span id="resource-total-label">Total</span><input name="totalUnits" type="number" min="1" step="1" /></label>
+        </div>
+        <label class="resource-week-choice"><input name="thisWeek" type="checkbox" /><span>Make this my one main resource for this week</span></label>
+        <label>One useful lesson<textarea name="lesson" rows="3"></textarea></label>
+        <label>One action to practise<textarea name="action" rows="3"></textarea></label>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel">Cancel</button>
+          <button class="primary-button" id="save-resource" value="default">Save resource</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </body>
+</html>
