@@ -160,7 +160,7 @@ textarea { resize: vertical; }
   transition: transform 180ms var(--ease-out), background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 .tab-button:hover { color: var(--ink); background: var(--surface-soft); transform: translateY(-2px); }
-.tab-button.active { color: rgb(46, 34, 34); background: var(--ink); box-shadow: 0 7px 18px rgb(39 35 31 / 16%); animation: tab-settle 320ms var(--ease-spring); }
+.tab-button.active { color: var(--surface); background: var(--ink); box-shadow: 0 7px 18px rgb(39 35 31 / 16%); animation: tab-settle 320ms var(--ease-spring); }
 
 /* ---------- Shared layout ---------- */
 main {
@@ -236,7 +236,7 @@ p { color: var(--muted); }
   font-weight: 800;
   transition: transform 180ms var(--ease-out), filter 180ms ease, box-shadow 180ms ease;
 }
-.primary-button { color: rgb(85, 68, 68); background: var(--ink); }
+.primary-button { color: var(--surface); background: var(--ink); }
 .primary-button:hover, .danger-button:hover { transform: translateY(-1px); filter: brightness(1.08); }
 .primary-button.small { padding: 9px 14px; font-size: .88rem; }
 .secondary-button { font-weight: 750; }

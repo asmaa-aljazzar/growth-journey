@@ -2,6 +2,24 @@
 
 A private, cloud-synchronized 30-day journal focused on Orange Academy, English, Academy review, sustainable wellbeing, and optional RT maintenance.
 
+## Live website
+
+**https://asmaa-aljazzar.github.io/growth-journey/**
+
+The website is publicly reachable, but journal entries are not public. Each signed-in user can access only their own database row through Supabase Row Level Security.
+
+## First login
+
+There is no default username or password.
+
+1. Open the live website.
+2. Select **Create account**.
+3. Enter your email address and choose a strong password.
+4. If Supabase sends a confirmation email, open it and confirm the address.
+5. Return to the live website and select **Sign in**.
+
+For a personal-only deployment, create the owner's account first and then disable new-user registration in Supabase under **Authentication → Sign In / Providers → Email**.
+
 ## Included
 
 - Email/password registration, login, password reset, and logout through Supabase Auth
@@ -31,4 +49,12 @@ The publishable key in `config.js` is intentionally public. Security is enforced
 
 ## Deployment
 
-This is a static website and can be published with GitHub Pages. After deployment, add the exact live URL in Supabase under **Authentication → URL Configuration** as both the Site URL and an allowed redirect URL.
+The website is deployed from the `main` branch and root folder with GitHub Pages.
+
+Supabase **Authentication → URL Configuration** must contain the following value as both the Site URL and an allowed redirect URL:
+
+```text
+https://asmaa-aljazzar.github.io/growth-journey/
+```
+
+After changing authentication settings, test account creation, email confirmation, sign-in, sign-out, and password reset from the live website.
