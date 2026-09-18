@@ -1841,6 +1841,7 @@ function renderTodos() {
   document.querySelector("#todo-count").textContent = `${completed} / ${todos.length} completed`;
   container.innerHTML = todos.length ? todos.map((todo) => `
     <div class="todo-item${todo.done ? " done" : ""}" data-todo-id="${escapeHtml(todo.id)}">
+      <span class="todo-drag-handle" draggable="true" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
       <input type="checkbox" ${todo.done ? "checked" : ""} aria-label="Mark ${escapeHtml(todo.text)} complete" />
       <span class="todo-category" data-category="${escapeHtml(todo.category)}">${escapeHtml(todo.category)}</span>
       <span class="todo-text">${escapeHtml(todo.text)}</span>
@@ -1865,6 +1866,78 @@ function carryTodosForward() {
   saveState();
   renderTodos();
   showToast(`${unfinished.length} unfinished task${unfinished.length === 1 ? "" : "s"} moved to tomorrow.`);
+}
+
+function syncTodoOrder() {
+  const date = selectedTodoDate();
+  const orderedIds = [...document.querySelectorAll("#todo-list [data-todo-id]")]
+    .map((item) => item.dataset.todoId);
+  if (!orderedIds.length) return;
+
+  const todosById = new Map(state.todos.map((todo) => [todo.id, todo]));
+  const orderedTodos = orderedIds.map((id) => todosById.get(id)).filter(Boolean);
+  let orderedIndex = 0;
+  state.todos = state.todos.map((todo) => {
+    if (todo.date !== date) return todo;
+    return orderedTodos[orderedIndex++] || todo;
+  });
+  saveState("To-do order saved; syncing…");
+}
+
+function setupTodoReorder() {
+  const container = document.querySelector("#todo-list");
+  let dragged = null;
+
+  function clearTodoDragState() {
+    container.querySelectorAll(".dragging, .drag-over-before, .drag-over-after").forEach((item) => {
+      item.classList.remove("dragging", "drag-over-before", "drag-over-after");
+    });
+  }
+
+  container.addEventListener("dragstart", (event) => {
+    const handle = event.target.closest(".todo-drag-handle");
+    if (!handle) return;
+    dragged = handle.closest("[data-todo-id]");
+    if (!dragged) return;
+    event.stopPropagation();
+    dragged.classList.add("dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", dragged.dataset.todoId);
+  });
+
+  container.addEventListener("dragover", (event) => {
+    if (!dragged) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const target = event.target.closest("[data-todo-id]");
+    clearTodoDragState();
+    dragged.classList.add("dragging");
+    if (!target || target === dragged) return;
+    const box = target.getBoundingClientRect();
+    target.classList.add(event.clientY > box.top + box.height / 2 ? "drag-over-after" : "drag-over-before");
+  });
+
+  container.addEventListener("drop", (event) => {
+    if (!dragged) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const target = event.target.closest("[data-todo-id]");
+    if (target && target !== dragged) {
+      const box = target.getBoundingClientRect();
+      const after = event.clientY > box.top + box.height / 2;
+      container.insertBefore(dragged, after ? target.nextElementSibling : target);
+      syncTodoOrder();
+    }
+    clearTodoDragState();
+    dragged = null;
+  });
+
+  container.addEventListener("dragend", (event) => {
+    if (!dragged) return;
+    event.stopPropagation();
+    clearTodoDragState();
+    dragged = null;
+  });
 }
 
 function applyCardOrder() {
@@ -1898,6 +1971,7 @@ function setupCardReorder() {
     if (button) moveCard(button.closest("[data-card-id]"), button.dataset.moveCard);
   });
   container.addEventListener("dragstart", (event) => {
+    if (event.target.closest("[data-todo-id]")) return;
     dragged = event.target.closest("[data-card-id]");
     if (!dragged) return;
     dragged.classList.add("dragging");
@@ -2190,6 +2264,7 @@ async function init() {
   setupStaticFields();
   setupEntryForms();
   setupCardReorder();
+  setupTodoReorder();
   applyTheme();
   renderEverything();
   activateTab(state.activeTab && document.querySelector(`#${state.activeTab}`) ? state.activeTab : "overview");

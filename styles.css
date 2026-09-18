@@ -1033,14 +1033,28 @@ section.movable-card > .card-move-bar { margin: 0 0 10px; padding: 0 4px; }
 .todo-list { display: grid; gap: 8px; }
 .todo-item {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-soft);
+  transition: opacity 160ms ease, box-shadow 160ms ease, transform 160ms var(--ease-out);
 }
+.todo-item.dragging { opacity: .45; transform: scale(.99); }
+.todo-item.drag-over-before { box-shadow: inset 0 3px 0 var(--orange); }
+.todo-item.drag-over-after { box-shadow: inset 0 -3px 0 var(--orange); }
+.todo-drag-handle {
+  cursor: grab;
+  padding: 3px 5px 3px 1px;
+  color: var(--muted);
+  font-weight: 900;
+  letter-spacing: -5px;
+  line-height: 1;
+  user-select: none;
+}
+.todo-drag-handle:active { cursor: grabbing; }
 .todo-item.done .todo-text { text-decoration: line-through; color: var(--muted); }
 .todo-category {
   padding: 3px 7px;
@@ -1085,8 +1099,10 @@ section.movable-card > .card-move-bar { margin: 0 0 10px; padding: 0 4px; }
 @media (max-width: 520px) {
   .auth-card { padding: 25px 20px; }
   .account-chip { padding-left: 6px; }
-  .todo-item { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .todo-category { grid-column: 2; justify-self: start; }
-  .todo-text { grid-column: 2; grid-row: 1; }
-  .todo-delete { grid-column: 3; grid-row: 1 / span 2; }
+  .todo-item { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+  .todo-drag-handle { grid-column: 1; grid-row: 1 / span 2; }
+  .todo-item > input[type="checkbox"] { grid-column: 2; grid-row: 1 / span 2; }
+  .todo-category { grid-column: 3; grid-row: 2; justify-self: start; }
+  .todo-text { grid-column: 3; grid-row: 1; }
+  .todo-delete { grid-column: 4; grid-row: 1 / span 2; }
 }
