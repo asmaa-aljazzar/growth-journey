@@ -1067,9 +1067,25 @@ section.movable-card > .card-move-bar { margin: 0 0 10px; padding: 0 4px; }
 .todo-category[data-category="English"] { background: var(--blue-soft); color: var(--blue); }
 .todo-category[data-category="Personal"] { background: var(--green-soft); color: var(--green); }
 .todo-category[data-category="RT"] { background: var(--surface); color: var(--muted); }
-.todo-delete { border: 0; background: transparent; color: var(--red); font-size: 1.15rem; }
+.todo-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.todo-actions button {
+  min-height: 30px;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .7rem;
+  font-weight: 800;
+}
+.todo-actions button:hover, .todo-actions button:focus-visible {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.todo-actions .todo-delete { border-color: transparent; background: transparent; color: var(--red); font-size: 1.15rem; }
 .todo-empty { margin: 10px 0; padding: 20px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); text-align: center; }
 .todo-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; color: var(--muted); font-size: .82rem; }
+.todo-footer-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 
 /* ---------- Month archive ---------- */
 .archive-card { margin-top: 20px; padding: 24px; }
@@ -1092,6 +1108,8 @@ section.movable-card > .card-move-bar { margin: 0 0 10px; padding: 0 4px; }
   .account-chip span { display: none; }
   .todo-form { grid-template-columns: 1fr; }
   .todo-footer, .archive-card .section-heading { align-items: stretch; flex-direction: column; }
+  .todo-footer-actions { justify-content: stretch; }
+  .todo-footer-actions button { flex: 1 1 190px; }
   .archive-actions { justify-content: stretch; }
   .archive-actions button { flex: 1 1 180px; }
 }
@@ -1104,5 +1122,6 @@ section.movable-card > .card-move-bar { margin: 0 0 10px; padding: 0 4px; }
   .todo-item > input[type="checkbox"] { grid-column: 2; grid-row: 1 / span 2; }
   .todo-category { grid-column: 3; grid-row: 2; justify-self: start; }
   .todo-text { grid-column: 3; grid-row: 1; }
-  .todo-delete { grid-column: 4; grid-row: 1 / span 2; }
+  .todo-actions { grid-column: 4; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; }
+  .todo-actions button { white-space: nowrap; }
 }

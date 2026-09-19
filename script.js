@@ -370,7 +370,7 @@ function createDefaultState(start = localDateISO()) {
   PERIOD_START = start;
   PERIOD_END = end;
   return {
-    version: 8,
+    version: 9,
     currentPeriod: { start, end, createdAt: new Date().toISOString() },
     theme: "light",
     activeTab: "overview",
@@ -378,6 +378,7 @@ function createDefaultState(start = localDateISO()) {
     goals: clone(defaultGoals),
     habits: makeHabits(start, end),
     todos: [],
+    lastTodoCarry: null,
     cardOrder: ["todos", "academy-review", "today-actions", "week-snapshot", "rhythms"],
     archives: [],
     assignments: [],
@@ -450,11 +451,17 @@ function normalizeState(stored) {
   const normalized = {
     ...defaults,
     ...stored,
-    version: 8,
+    version: 9,
     currentPeriod: { ...defaults.currentPeriod, ...(stored?.currentPeriod || {}) },
     goals: Array.isArray(stored?.goals) ? stored.goals : defaults.goals,
     habits: Array.isArray(stored?.habits) && stored.habits.length ? stored.habits : defaults.habits,
     todos: Array.isArray(stored?.todos) ? stored.todos : [],
+    lastTodoCarry: stored?.lastTodoCarry &&
+      typeof stored.lastTodoCarry.fromDate === "string" &&
+      typeof stored.lastTodoCarry.toDate === "string" &&
+      Array.isArray(stored.lastTodoCarry.todoIds)
+        ? stored.lastTodoCarry
+        : null,
     cardOrder: Array.isArray(stored?.cardOrder) ? stored.cardOrder : defaults.cardOrder,
     archives: Array.isArray(stored?.archives) ? stored.archives : [],
     assignments: Array.isArray(stored?.assignments) ? stored.assignments : [],
@@ -1838,6 +1845,16 @@ function renderTodos() {
   const todos = state.todos.filter((todo) => todo.date === date);
   const container = document.querySelector("#todo-list");
   const completed = todos.filter((todo) => todo.done).length;
+  const canMoveBack = date > PERIOD_START;
+  const carriedIds = new Set(state.lastTodoCarry?.todoIds || []);
+  const undoableCount = state.lastTodoCarry
+    ? state.todos.filter((todo) => carriedIds.has(todo.id) && todo.date === state.lastTodoCarry.toDate).length
+    : 0;
+  const undoButton = document.querySelector("#undo-carry-button");
+  undoButton.hidden = undoableCount === 0;
+  undoButton.textContent = undoableCount > 0
+    ? `Undo last carry (${undoableCount})`
+    : "Undo last carry";
   document.querySelector("#todo-count").textContent = `${completed} / ${todos.length} completed`;
   container.innerHTML = todos.length ? todos.map((todo) => `
     <div class="todo-item${todo.done ? " done" : ""}" data-todo-id="${escapeHtml(todo.id)}">
@@ -1845,8 +1862,47 @@ function renderTodos() {
       <input type="checkbox" ${todo.done ? "checked" : ""} aria-label="Mark ${escapeHtml(todo.text)} complete" />
       <span class="todo-category" data-category="${escapeHtml(todo.category)}">${escapeHtml(todo.category)}</span>
       <span class="todo-text">${escapeHtml(todo.text)}</span>
-      <button class="todo-delete" type="button" aria-label="Delete ${escapeHtml(todo.text)}">×</button>
+      <span class="todo-actions">
+        ${canMoveBack ? `<button class="todo-copy-previous" type="button" title="Copy to previous day" aria-label="Copy ${escapeHtml(todo.text)} to previous day">Copy ←</button>
+        <button class="todo-move-previous" type="button" title="Move to previous day" aria-label="Move ${escapeHtml(todo.text)} to previous day">Move ←</button>` : ""}
+        <button class="todo-delete" type="button" title="Delete task" aria-label="Delete ${escapeHtml(todo.text)}">×</button>
+      </span>
     </div>`).join("") : `<p class="todo-empty">No tasks for ${escapeHtml(formatDate(date, { weekday: "long", month: "short", day: "numeric" }))}. Keep the list deliberately small.</p>`;
+}
+
+function copyTodoToPreviousDay(id) {
+  const source = state.todos.find((todo) => todo.id === id);
+  if (!source) return;
+  const previousDate = addDaysISO(source.date, -1);
+  if (previousDate < PERIOD_START) {
+    showToast("This task is already on the first day of the current cycle.");
+    return;
+  }
+  state.todos.push({
+    ...source,
+    id: makeId("todo"),
+    date: previousDate,
+    done: false,
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  renderTodos();
+  showToast(`Task copied to ${formatDate(previousDate, { month: "short", day: "numeric" })}.`);
+}
+
+function moveTodoToPreviousDay(id) {
+  const todo = state.todos.find((item) => item.id === id);
+  if (!todo) return;
+  const previousDate = addDaysISO(todo.date, -1);
+  if (previousDate < PERIOD_START) {
+    showToast("This task is already on the first day of the current cycle.");
+    return;
+  }
+  todo.date = previousDate;
+  document.querySelector("#todo-date").value = previousDate;
+  saveState();
+  renderTodos();
+  showToast(`Task moved back to ${formatDate(previousDate, { month: "short", day: "numeric" })}.`);
 }
 
 function carryTodosForward() {
@@ -1861,11 +1917,40 @@ function carryTodosForward() {
     showToast("There are no unfinished tasks to carry forward.");
     return;
   }
+  state.lastTodoCarry = {
+    fromDate,
+    toDate: nextDate,
+    todoIds: unfinished.map((todo) => todo.id),
+    movedAt: new Date().toISOString()
+  };
   unfinished.forEach((todo) => { todo.date = nextDate; });
   document.querySelector("#todo-date").value = nextDate;
   saveState();
   renderTodos();
   showToast(`${unfinished.length} unfinished task${unfinished.length === 1 ? "" : "s"} moved to tomorrow.`);
+}
+
+function undoLastTodoCarry() {
+  const carry = state.lastTodoCarry;
+  if (!carry) {
+    showToast("There is no recent carry action to undo.");
+    return;
+  }
+  const carriedIds = new Set(carry.todoIds);
+  const tasksToRestore = state.todos.filter((todo) => carriedIds.has(todo.id) && todo.date === carry.toDate);
+  if (!tasksToRestore.length) {
+    state.lastTodoCarry = null;
+    saveState();
+    renderTodos();
+    showToast("Those carried tasks have already been moved or deleted.");
+    return;
+  }
+  tasksToRestore.forEach((todo) => { todo.date = carry.fromDate; });
+  state.lastTodoCarry = null;
+  document.querySelector("#todo-date").value = carry.fromDate;
+  saveState();
+  renderTodos();
+  showToast(`${tasksToRestore.length} task${tasksToRestore.length === 1 ? "" : "s"} returned to the previous day.`);
 }
 
 function syncTodoOrder() {
@@ -2146,14 +2231,23 @@ function setupStaticFields() {
     renderTodos();
   });
   document.querySelector("#todo-list").addEventListener("click", (event) => {
-    const button = event.target.closest(".todo-delete");
+    const button = event.target.closest(".todo-copy-previous, .todo-move-previous, .todo-delete");
     if (!button) return;
     const id = button.closest("[data-todo-id]")?.dataset.todoId;
+    if (button.matches(".todo-copy-previous")) {
+      copyTodoToPreviousDay(id);
+      return;
+    }
+    if (button.matches(".todo-move-previous")) {
+      moveTodoToPreviousDay(id);
+      return;
+    }
     state.todos = state.todos.filter((todo) => todo.id !== id);
     saveState();
     renderTodos();
   });
   document.querySelector("#carry-todos-button").addEventListener("click", carryTodosForward);
+  document.querySelector("#undo-carry-button").addEventListener("click", undoLastTodoCarry);
   document.querySelector("#save-month-snapshot").addEventListener("click", () => saveCurrentArchive(true));
   document.querySelector("#archive-start-next").addEventListener("click", archiveAndStartNext);
   document.querySelector("#archive-list").addEventListener("click", (event) => {

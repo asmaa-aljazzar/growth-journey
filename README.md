@@ -28,7 +28,7 @@ For a personal-only deployment, create the owner's account first and then disabl
 - A rolling 30-day cycle beginning on the user's first day
 - Realistic Academy-aware monthly targets
 - Academy Daily, Group, and Masterpiece task tracking
-- Date-specific, drag-to-reorder daily to-do lists and “carry unfinished to tomorrow”
+- Date-specific, drag-to-reorder daily to-do lists with carry-to-tomorrow, undo, copy-back, and move-back controls
 - Movable Overview cards with remembered order
 - Month snapshots and “Archive & start next cycle”
 - Full JSON backup/restore plus a separate JSON download for each archived month
